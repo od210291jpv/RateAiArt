@@ -1,13 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-
 namespace RateAiArt.Data.Models
 {
     public class ArtRateResultModel
     {
         public int Id { get; set; }
 
-        public ArtPublisherModel ArtPublisherModel { get; set; }
+        public int ArtId { get; set; }
+
+        public ArtModel Art { get; set; }
 
         public int Creativity { get; set; }
 
@@ -21,6 +20,6 @@ namespace RateAiArt.Data.Models
 
         public int StylisticConsistency { get; set; }
 
-        public List<string> ImprovementTips { get; set; }
+        public List<string> ImprovementTips { get; set; } = new();
     }
 }

@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-
 namespace RateAiArt.Data.Models
 {
     public class PublisherLeaderBoardScoreModel
     {
         public int Id { get; set; }
         
-        public string NickName { get; set; }
+        public int PublisherId { get; set; }
+        
+        public ArtPublisherModel Publisher { get; set; }
         
         public double LeaderBoardRate { get; set; }
         

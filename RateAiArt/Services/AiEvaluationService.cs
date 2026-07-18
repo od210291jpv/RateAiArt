@@ -1,6 +1,6 @@
 ﻿namespace RateAiArt.Services
 {
-    public interface IAiService
+    public interface AiEvaluationService
     {
     }
 }
