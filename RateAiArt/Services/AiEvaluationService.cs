@@ -11,17 +11,27 @@ namespace RateAiArt.Services
     public class AiEvaluationService : IAiEvaluationService
     {
         private readonly IChatCompletionService _chatCompletion;
-        private readonly Kernel _kernel; // Додайте, якщо вам потрібен сам об'єкт Kernel для плагінів
+        private readonly Kernel _kernel;
 
-        // ASP.NET Core автоматично "підкладе" сюди налаштовані сервіси з Program.cs
         public AiEvaluationService(IChatCompletionService chatCompletion, Kernel kernel)
         {
             _chatCompletion = chatCompletion;
             _kernel = kernel;
         }
 
-        public async Task<EvaluationResponse> EvaluateArtAsync(byte[] imageBytes, string mimeType)
+        public async Task<EvaluationResponse> EvaluateArtAsync(string base64Image, string mimeType)
         {
+            byte[] imageBytes;
+
+            try
+            {
+                imageBytes = Convert.FromBase64String(base64Image);
+            }
+            catch (Exception)
+            {
+                throw new FormatException("Invalid Image format");
+            }
+
             var chatHistory = new ChatHistory();
             chatHistory.AddSystemMessage("""
                 You are an expert AI Art Critic and Technical Evaluator.

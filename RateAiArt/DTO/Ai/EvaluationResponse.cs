@@ -15,5 +15,13 @@
         public int StylisticConsistency { get; set; }
 
         public List<string> ImprovementTips { get; set; } = new();
+
+        public int OverallScore
+        {
+            get
+            {
+                return (Creativity + Complexity + RenderQuality + LightingAndColors + Composition + StylisticConsistency) / 6;
+            }
+        }
     }
 }

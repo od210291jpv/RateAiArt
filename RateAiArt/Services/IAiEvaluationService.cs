@@ -4,6 +4,6 @@ namespace RateAiArt.Services
 {
     public interface IAiEvaluationService
     {
-        Task<EvaluationResponse> EvaluateArtAsync(byte[] imageBytes, string mimeType);
+        Task<EvaluationResponse> EvaluateArtAsync(string Base64Image, string mimeType);
     }
 }

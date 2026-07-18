@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 
 using RateAiArt.Data;
+using RateAiArt.Data.Models;
 using RateAiArt.DTO.Ai;
 using RateAiArt.Services;
-
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace RateAiArt.Controllers
 {
@@ -12,41 +11,74 @@ namespace RateAiArt.Controllers
     [Route("api/[controller]")]
     public class RateAiController : Controller
     {
-        private readonly ApplicationContext _context;
+        private readonly ApplicationContext context;
         private readonly IAiEvaluationService _evaluationService;
-
-        //private readonly Kernel _kernel;
 
         public RateAiController(ApplicationContext context, IAiEvaluationService evaluationService)
         {
-            _context = context;
+            this.context = context;
             _evaluationService = evaluationService;
-        }
-
-        [SwaggerIgnore]
-        public IActionResult Index()
-        {
-            return View();
         }
 
         [HttpPost("rateAiArt")]
         public async Task<IActionResult> RateAiArt([FromBody] PromptRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.Base64Image)) 
-            {
-                return BadRequest("No image provided");
-            }
+        {                        
+            EvaluationResponse result = await this._evaluationService.EvaluateArtAsync(request.Base64Image, request.MimeType);
 
-            byte[] imageBytes = Convert.FromBase64String(request.Base64Image);
-            EvaluationResponse result = await this._evaluationService.EvaluateArtAsync(imageBytes, request.MimeType);
+            if (request.ShowcaseResultAccepted) 
+            {
+                await this.context.Publishers.AddAsync(new ArtPublisherModel 
+                {
+                    Arts = new List<ArtModel>() 
+                    {
+                        new ArtModel
+                        {
+                            ImageHash = request.Base64Image.GetHashCode().ToString(),
+                            ImagePath = request.Base64Image,
+                            ArtRateResultModel = new ArtRateResultModel
+                            {
+                                Creativity = result.Creativity,
+                                Complexity = result.Complexity,
+                                RenderQuality = result.RenderQuality,
+                                LightingAndColors = result.LightingAndColors,
+                                Composition = result.Composition,
+                                StylisticConsistency = result.StylisticConsistency,
+                                ImprovementTips = result.ImprovementTips,
+                            },
+                            CreatedAt = DateTime.UtcNow
+                        }
+                    },
+                    LeaderBoardScores = new List<PublisherLeaderBoardScoreModel>(),
+                    Nickname = request.Nickname ?? "Anonymous",
+                    LeaderBoardRate = result.OverallScore,                    
+                });
+
+                await this.context.SaveChangesAsync();
+
+                if (request.Nickname != null) 
+                {
+                    int publisherId = this.context.Publishers
+                        .Where(p => p.Nickname == (request.Nickname ?? "Anonymous"))
+                        .Select(p => p.Id)
+                        .FirstOrDefault();
+
+                    await this.context.PublisherLeaderBoardScores.AddAsync(new PublisherLeaderBoardScoreModel
+                    {
+                        PublisherId = publisherId,
+                        LeaderBoardRate = result.OverallScore,
+                        ArtUrl = ""
+                    });
+
+                    await this.context.SaveChangesAsync();
+                }
+            }
 
             return Ok(result);
         }
 
-        [HttpPost("getLeaderBoard")]
+        [HttpGet("getLeaderBoard")]
         public IActionResult GetLeaderBoard()
         {
-            // Dummy endpoint for POST /getLeaderBoard
             return Ok();
         }
     }
