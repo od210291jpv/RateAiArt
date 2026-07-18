@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SemanticKernel;
+
 using RateAiArt.Data;
+using RateAiArt.DTO.Ai;
+using RateAiArt.Services;
+
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace RateAiArt.Controllers
 {
@@ -9,24 +13,34 @@ namespace RateAiArt.Controllers
     public class RateAiController : Controller
     {
         private readonly ApplicationContext _context;
-        private readonly Kernel _kernel;
+        private readonly IAiEvaluationService _evaluationService;
 
-        public RateAiController(ApplicationContext context, Kernel kernel)
+        //private readonly Kernel _kernel;
+
+        public RateAiController(ApplicationContext context, IAiEvaluationService evaluationService)
         {
             _context = context;
-            _kernel = kernel;
+            _evaluationService = evaluationService;
         }
 
+        [SwaggerIgnore]
         public IActionResult Index()
         {
             return View();
         }
 
         [HttpPost("rateAiArt")]
-        public IActionResult RateAiArt()
+        public async Task<IActionResult> RateAiArt([FromBody] PromptRequest request)
         {
-            // Dummy endpoint for POST /rateAiArt
-            return Ok();
+            if (string.IsNullOrWhiteSpace(request.Base64Image)) 
+            {
+                return BadRequest("No image provided");
+            }
+
+            byte[] imageBytes = Convert.FromBase64String(request.Base64Image);
+            EvaluationResponse result = await this._evaluationService.EvaluateArtAsync(imageBytes, request.MimeType);
+
+            return Ok(result);
         }
 
         [HttpPost("getLeaderBoard")]

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Microsoft.SemanticKernel;
 
 using RateAiArt.Configuration;
@@ -8,6 +9,17 @@ using RateAiArt.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "RateAiArt API",
+        Version = "v1",
+        Description = "API for rating AI-generated artwork"
+    });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationContext>(options =>
@@ -27,14 +39,22 @@ kernelBuilder.AddOpenAIChatCompletion(
     endpoint: new Uri($"{ollamaSettings.Host}/v1"));
 
 // Build the kernel and register it in DI
-var kernel = kernelBuilder.Build();
-builder.Services.AddSingleton(kernel);
 
-builder.Services.AddScoped<AiEvaluationService>();
+
+builder.Services.AddScoped<IAiEvaluationService, AiEvaluationService>();
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "RateAiArt API v1");
+        options.RoutePrefix = "swagger";
+    });
+}
+else
 {
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.

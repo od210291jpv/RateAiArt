@@ -1,0 +1,182 @@
+﻿@page
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Rate AI Art Endpoint</title>
+    <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                max-width: 800px;
+                margin: 2rem auto;
+                padding: 0 1rem;
+                background-color: #f9fafb;
+                color: #333;
+            }
+            .container {
+                background: white;
+                padding: 2rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .controls {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+                margin-bottom: 1.5rem;
+            }
+            button {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: 500;
+            }
+            button:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+            button:hover:not(:disabled) {
+                background-color: #0056b3;
+            }
+            .preview-box {
+                margin-bottom: 1.5rem;
+            }
+            img#preview {
+                max-width: 100%;
+                max-height: 400px;
+                border-radius: 4px;
+                display: none;
+                border: 1px solid #ddd;
+            }
+            pre {
+                background: #1e1e1e;
+                color: #d4d4d4;
+                padding: 1rem;
+                border-radius: 4px;
+                overflow-x: auto;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            #status {
+                font-weight: bold;
+                margin-bottom: 0.5rem;
+                color: #555;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Відладка ендпоінту /rateAiArt</h2>
+
+        <div class="controls">
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp" />
+            <button id="sendBtn">Оцінити арт</button>
+        </div>
+
+        <div class="preview-box">
+            <img id="preview" alt="Попередній перегляд" />
+        </div>
+
+        <div id="status">Очікування файлу...</div>
+        <pre id="responseOutput">Тут буде результат JSON...</pre>
+    </div>
+
+    <script>
+            const fileInput = document.getElementById('fileInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const preview = document.getElementById('preview');
+            const status = document.getElementById('status');
+            const responseOutput = document.getElementById('responseOutput');
+
+            // 1. Попередній перегляд зображення
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        preview.src = event.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 2. Обробка відправки
+            sendBtn.addEventListener('click', async () => {
+                const file = fileInput.files[0];
+                if (!file) {
+                    alert('Будь ласка, оберіть зображення спочатку!');
+                    return;
+                }
+
+                // Блокуємо кнопку під час запиту
+                sendBtn.disabled = true;
+                status.textContent = 'Читання файлу...';
+                status.style.color = '#333';
+                responseOutput.textContent = '';
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    // Результат FileReader має формат: data:image/jpeg;base64,/9j/4AAQSkZJR...
+                    const dataUrl = event.target.result;
+
+                    // Розділяємо рядок, щоб отримати MIME-тип та сам Base64
+                    const parts = dataUrl.split(',');
+                    const base64String = parts[1];
+                    // Витягуємо "image/jpeg" з "data:image/jpeg;base64"
+                    const mimeType = parts[0].split(':')[1].split(';')[0];
+
+                    const payload = {
+                        base64Image: base64String,
+                        mimeType: mimeType
+                    };
+
+                    status.textContent = 'Відправка запиту до ШІ (це може зайняти 10-30 секунд)...';
+                    status.style.color = '#007bff';
+
+                    try {
+                        // ПРИМІТКА: Змініть URL, якщо ваш контролер має інший базовий маршрут
+                        // наприклад: 'https://localhost:5001/api/rateAiArt' або '/rateAiArt'
+                        const response = await fetch('api/rateai/rateAiArt', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Помилка сервера: ${response.status} ${response.statusText}`);
+                        }
+
+                        const result = await response.json();
+                        status.textContent = 'Успішно оцінено!';
+                        status.style.color = 'green';
+
+                        // Виводимо форматований JSON
+                        responseOutput.textContent = JSON.stringify(result, null, 2);
+                    } catch (error) {
+                        status.textContent = 'Виникла помилка!';
+                        status.style.color = 'red';
+                        responseOutput.textContent = error.message;
+                    } finally {
+                        sendBtn.disabled = false;
+                    }
+                };
+
+                // Запускаємо читання файлу як Data URL (Base64)
+                reader.readAsDataURL(file);
+            });
+    </script>
+
+</body>
+</html>
