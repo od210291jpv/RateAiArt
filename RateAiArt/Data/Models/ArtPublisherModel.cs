@@ -10,6 +10,6 @@ namespace RateAiArt.Data.Models
 
         public string Nickname { get; set; } = string.Empty;
         
-        public int? LeaderBoardRate { get; set; }
+        public double? LeaderBoardRate { get; set; }
     }
 }

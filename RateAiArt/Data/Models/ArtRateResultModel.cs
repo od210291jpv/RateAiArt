@@ -6,7 +6,7 @@ namespace RateAiArt.Data.Models
 
         public int ArtId { get; set; }
 
-        public ArtModel Art { get; set; }
+        public ArtModel Art { get; set; } = null!;
 
         public int Creativity { get; set; }
 

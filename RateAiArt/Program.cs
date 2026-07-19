@@ -42,6 +42,7 @@ kernelBuilder.AddOpenAIChatCompletion(
 
 
 builder.Services.AddScoped<IAiEvaluationService, AiEvaluationService>();
+builder.Services.AddScoped<ILeaderBoardService, LeaderBoardService>();
 
 var app = builder.Build();
 
@@ -64,6 +65,7 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthorization();
+app.UseStaticFiles();
 
 app.MapStaticAssets();
 app.MapRazorPages().WithStaticAssets();

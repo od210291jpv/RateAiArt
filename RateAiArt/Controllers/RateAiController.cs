@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RateAiArt.Data;
 using RateAiArt.Data.Models;
 using RateAiArt.DTO.Ai;
+using RateAiArt.DTO.LeaderBoard;
 using RateAiArt.Services;
 
 namespace RateAiArt.Controllers
@@ -11,14 +12,16 @@ namespace RateAiArt.Controllers
     [Route("api/[controller]")]
     public class RateAiController : Controller
     {
-        private readonly ApplicationContext context;
+        private readonly ApplicationContext _context;
         private readonly IAiEvaluationService _evaluationService;
         private readonly IWebHostEnvironment _environment;
+        private readonly ILeaderBoardService _leaderBoardService;
 
-        public RateAiController(ApplicationContext context, IAiEvaluationService evaluationService, IWebHostEnvironment environment)
+        public RateAiController(ApplicationContext context, IAiEvaluationService evaluationService, ILeaderBoardService leaderBoardService, IWebHostEnvironment environment)
         {
-            this.context = context;
+            _context = context;
             _evaluationService = evaluationService;
+            _leaderBoardService = leaderBoardService;
             _environment = environment;
         }
 
@@ -31,7 +34,7 @@ namespace RateAiArt.Controllers
             {
                 string imageHash = request.Base64Image.GetHashCode().ToString();
 
-                await this.context.Publishers.AddAsync(new ArtPublisherModel 
+                await this._context.Publishers.AddAsync(new ArtPublisherModel 
                 {
                     Arts = new List<ArtModel>() 
                     {
@@ -57,23 +60,19 @@ namespace RateAiArt.Controllers
                     LeaderBoardRate = result.OverallScore,                    
                 });
 
-                await this.context.SaveChangesAsync();
+                await this._context.SaveChangesAsync();
 
                 if (request.Nickname != null) 
                 {
-                    int publisherId = this.context.Publishers
+                    int publisherId = this._context.Publishers
                         .Where(p => p.Nickname == (request.Nickname ?? "Anonymous"))
                         .Select(p => p.Id)
                         .FirstOrDefault();
 
-                    await this.context.PublisherLeaderBoardScores.AddAsync(new PublisherLeaderBoardScoreModel
-                    {
-                        PublisherId = publisherId,
-                        LeaderBoardRate = result.OverallScore,
-                        ArtUrl = await this.SaveImageToDiskAsync(request.Base64Image, imageHash, request.MimeType)
-                    });
-
-                    await this.context.SaveChangesAsync();
+                    await this._leaderBoardService.UpdateLeaderBoardRateAsync(
+                        publisherId,
+                        result.OverallScore,
+                        await this.SaveImageToDiskAsync(request.Base64Image, imageHash, request.MimeType));
                 }
             }
 
@@ -99,13 +98,16 @@ namespace RateAiArt.Controllers
             byte[] imageBytes = Convert.FromBase64String(base64String);
             await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
 
-            return $"/uploads/{fileName}";
+            var host = HttpContext.Request.Host.ToUriComponent();
+
+            return $"{HttpContext.Request.Scheme}://{host}/uploads/{fileName}";
         }
 
         [HttpGet("getLeaderBoard")]
-        public IActionResult GetLeaderBoard()
+        public async Task<IActionResult> GetLeaderBoard()
         {
-            return Ok();
+            List<LeaderBoardResultDto> result = await this._leaderBoardService.GetLeaderBoard(10);
+            return Ok(result);
         }
     }
 }

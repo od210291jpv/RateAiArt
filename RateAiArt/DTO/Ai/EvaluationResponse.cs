@@ -16,11 +16,11 @@
 
         public List<string> ImprovementTips { get; set; } = new();
 
-        public int OverallScore
+        public double OverallScore
         {
             get
             {
-                return (Creativity + Complexity + RenderQuality + LightingAndColors + Composition + StylisticConsistency) / 6;
+                return (Creativity + Complexity + RenderQuality + LightingAndColors + Composition + StylisticConsistency) / 6d;
             }
         }
     }
