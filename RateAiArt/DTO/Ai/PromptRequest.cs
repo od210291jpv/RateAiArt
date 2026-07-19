@@ -18,6 +18,7 @@ namespace RateAiArt.DTO.Ai
         [JsonPropertyName("showcaseResultAccepted")]
         public bool ShowcaseResultAccepted { get; set; }
 
+        [JsonPropertyName("nickname")]
         public string? Nickname { get; set; } = string.Empty;
     }
 }

@@ -85,6 +85,13 @@
             <img id="preview" alt="Попередній перегляд" />
         </div>
 
+        <div>
+            <label for="nicknameInput">Нікнейм:</label>
+            <input type="text" id="nicknameInput" placeholder="Введіть ваш нікнейм" />
+            <input type="checkbox" id="showcaseResultAccepted" />
+            <label for="showcaseResultAccepted">Погоджуюсь на відображення результату</label>
+        </div>
+
         <div id="status">Очікування файлу...</div>
         <pre id="responseOutput">Тут буде результат JSON...</pre>
     </div>
@@ -136,7 +143,9 @@
 
                     const payload = {
                         base64Image: base64String,
-                        mimeType: mimeType
+                        mimeType: mimeType,
+                        showcaseResultAccepted: document.getElementById('showcaseResultAccepted').checked,
+                        nickname: document.getElementById('nicknameInput').value || null
                     };
 
                     status.textContent = 'Відправка запиту до ШІ (це може зайняти 10-30 секунд)...';

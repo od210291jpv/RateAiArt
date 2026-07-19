@@ -13,11 +13,13 @@ namespace RateAiArt.Controllers
     {
         private readonly ApplicationContext context;
         private readonly IAiEvaluationService _evaluationService;
+        private readonly IWebHostEnvironment _environment;
 
-        public RateAiController(ApplicationContext context, IAiEvaluationService evaluationService)
+        public RateAiController(ApplicationContext context, IAiEvaluationService evaluationService, IWebHostEnvironment environment)
         {
             this.context = context;
             _evaluationService = evaluationService;
+            _environment = environment;
         }
 
         [HttpPost("rateAiArt")]
@@ -27,6 +29,8 @@ namespace RateAiArt.Controllers
 
             if (request.ShowcaseResultAccepted) 
             {
+                string imageHash = request.Base64Image.GetHashCode().ToString();
+
                 await this.context.Publishers.AddAsync(new ArtPublisherModel 
                 {
                     Arts = new List<ArtModel>() 
@@ -66,7 +70,7 @@ namespace RateAiArt.Controllers
                     {
                         PublisherId = publisherId,
                         LeaderBoardRate = result.OverallScore,
-                        ArtUrl = ""
+                        ArtUrl = await this.SaveImageToDiskAsync(request.Base64Image, imageHash, request.MimeType)
                     });
 
                     await this.context.SaveChangesAsync();
@@ -74,6 +78,28 @@ namespace RateAiArt.Controllers
             }
 
             return Ok(result);
+        }
+
+        private async Task<string> SaveImageToDiskAsync(string base64String, string hash, string mimeType)
+        {
+            string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            string extension = mimeType.Split('/').LastOrDefault() ?? "jpg";
+
+            string uniqueId = Guid.NewGuid().ToString("N").Substring(0, 8);
+            string fileName = $"{hash}_{uniqueId}.{extension}";
+
+            string filePath = Path.Combine(uploadsFolder, fileName);
+
+            byte[] imageBytes = Convert.FromBase64String(base64String);
+            await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+
+            return $"/uploads/{fileName}";
         }
 
         [HttpGet("getLeaderBoard")]
