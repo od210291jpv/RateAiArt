@@ -1,10 +1,435 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"]           = "Rate Your AI Art — AI-Powered Scoring & Feedback";
+    ViewData["OgTitle"]         = "RateAiArt — Rate Your AI Art with Real AI Feedback";
+    ViewData["MetaDescription"] = "Upload your AI-generated artwork and get an instant expert score across 6 creative dimensions: Creativity, Complexity, Render Quality, Lighting & Colors, Composition, and Stylistic Consistency. Earn badges and compete on the global leaderboard.";   
+    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Animated background -->
+<div class="page-bg" aria-hidden="true"></div>
+
+<!-- ── NAVBAR ────────────────────────────── -->
+<nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="#" class="nav-brand" aria-label="RateAiArt home">
+        Rate<span>Ai</span>Art
+    </a>
+    <ul class="nav-links">
+        <li><a href="#rate-section" id="nav-rate">Rate Your Art</a></li>
+        <li><a href="#leaderboard-section" id="nav-leaderboard">Leaderboard</a></li>
+        <li><a href="#gallery-section" id="nav-gallery">Gallery</a></li>
+    </ul>
+</nav>
+
+<!-- ── HERO ──────────────────────────────── -->
+<section class="hero" aria-label="Hero">
+    <div class="container">
+        <div class="hero-badge">✦ AI-Powered Art Judge</div>
+
+        <h1 class="hero-title">
+            Get Your AI Art<br />
+            <span class="gradient-text">Rated & Ranked</span>
+        </h1>
+
+        <p class="hero-subtitle">
+            Upload your AI-generated artwork and receive an instant expert score across 6 creative dimensions, personalised feedback, and a place on the global leaderboard.
+        </p>
+
+        <div class="hero-stats" id="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value">6</div>
+                <div class="hero-stat-label">Scoring Dimensions</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">AI</div>
+                <div class="hero-stat-label">Powered Judge</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">3</div>
+                <div class="hero-stat-label">Achievement Badges</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── UPLOAD & RATE SECTION ─────────────── -->
+<section class="upload-section section" id="rate-section" aria-label="Rate your art">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+
+            <!-- Left col: form -->
+            <div class="col-lg-6 animate-fade-up">
+                <span class="section-tag">Step 1</span>
+                <h2 class="section-title">Upload Your Artwork</h2>
+                <p class="section-desc text-muted mb-4">Drop any AI-generated image to get an instant intelligent critique and score.</p>
+
+                <form id="rate-form" novalidate aria-label="Art rating form">
+                    <!-- Dropzone -->
+                    <div class="dropzone glass-card" id="dropzone" role="button" tabindex="0"
+                         aria-label="Upload image area — click or drag and drop" aria-describedby="dropzone-hint">
+                        <div id="dropzone-content">
+                            <div class="dropzone-icon" aria-hidden="true">🎨</div>
+                            <p class="dropzone-text">Drag &amp; drop your art here</p>
+                            <p class="dropzone-subtext" id="dropzone-hint">or click to browse — PNG, JPG, WEBP up to 20 MB</p>
+                        </div>
+                        <img class="image-preview" id="image-preview" alt="Uploaded artwork preview" />
+                        <div class="preview-overlay" id="preview-overlay" aria-hidden="true">
+                            🔄 Change Image
+                        </div>
+                        <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/gif"
+                               style="display:none" aria-label="Choose image file" />
+                    </div>
+
+                    <p id="file-error" class="text-danger mt-2" style="font-size:.82rem;display:none;" role="alert" aria-live="polite"></p>
+
+                    <div class="divider"></div>
+
+                    <!-- Nickname -->
+                    <div class="form-group">
+                        <label class="form-label" for="nickname-input">Nickname <span class="text-muted">(optional)</span></label>
+                        <input type="text" id="nickname-input" class="form-input"
+                               placeholder="e.g. ArtMaster42" maxlength="40"
+                               aria-label="Your nickname for the leaderboard" autocomplete="off" />
+                    </div>
+
+                    <!-- Consent -->
+                    <div class="form-group">
+                        <label class="form-check-row" for="consent-checkbox" id="consent-label">
+                            <input type="checkbox" id="consent-checkbox" class="form-checkbox"
+                                   aria-describedby="consent-desc" />
+                            <span class="form-check-label" id="consent-desc">
+                                <strong>Publish my result on the leaderboard</strong><br />
+                                Your score, nickname and artwork will appear in the public top-10 gallery.
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" id="submit-btn" class="btn-primary btn-full" disabled
+                            aria-label="Submit artwork for AI rating">
+                        <span id="submit-icon" aria-hidden="true">✦</span>
+                        <span id="submit-label">Rate My Art</span>
+                    </button>
+
+                    <!-- Loading state -->
+                    <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
+                        <div class="spinner" aria-hidden="true"></div>
+                        <span id="loading-text">Analysing your artwork with AI…</span>
+                    </div>
+
+                    <!-- Rate limit banner -->
+                    <div class="rate-limit-banner" id="rate-limit-banner" role="alert" aria-live="assertive">
+                        <div class="rate-limit-icon" aria-hidden="true">⏱️</div>
+                        <div>
+                            <div class="rate-limit-title">Daily Limit Reached</div>
+                            <div class="rate-limit-msg">
+                                You've used 5 ratings this window. Next slot opens in
+                                <span class="rate-limit-countdown" id="countdown-timer" aria-live="polite">—</span>.
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right col: how it works -->
+            <div class="col-lg-6 animate-fade-up">
+                <div class="glass-card p-4">
+                    <h3 class="mb-3" style="font-size:1rem;font-weight:700;color:#b8c4d4;text-transform:uppercase;letter-spacing:.08em;">
+                        How It Works
+                    </h3>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex gap-3 align-items-start">
+                            <div class="tag" style="min-width:28px;justify-content:center;">1</div>
+                            <div>
+                                <div style="font-weight:600;margin-bottom:2px;">Upload your AI art</div>
+                                <div style="font-size:.85rem;color:#94a3b8;">Any AI-generated image — PNG, JPG, WebP up to 20 MB.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start">
+                            <div class="tag" style="min-width:28px;justify-content:center;">2</div>
+                            <div>
+                                <div style="font-weight:600;margin-bottom:2px;">AI judges your work</div>
+                                <div style="font-size:.85rem;color:#94a3b8;">Our model scores 6 creative dimensions and generates personalised tips.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start">
+                            <div class="tag" style="min-width:28px;justify-content:center;">3</div>
+                            <div>
+                                <div style="font-weight:600;margin-bottom:2px;">Earn your badge</div>
+                                <div style="font-size:.85rem;color:#94a3b8;">Score ≥ 7.0 earns Bronze, ≥ 9.0 earns Silver, a perfect 10 earns Gold.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start">
+                            <div class="tag" style="min-width:28px;justify-content:center;">4</div>
+                            <div>
+                                <div style="font-weight:600;margin-bottom:2px;">Share & compete</div>
+                                <div style="font-size:.85rem;color:#94a3b8;">Show your score on social media or climb the global leaderboard.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <h3 class="mb-3" style="font-size:1rem;font-weight:700;color:#b8c4d4;text-transform:uppercase;letter-spacing:.08em;">
+                        Scoring Dimensions
+                    </h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="tag">🎨 Creativity</span>
+                        <span class="tag">🔧 Complexity</span>
+                        <span class="tag">📸 Render Quality</span>
+                        <span class="tag">💡 Lighting &amp; Colors</span>
+                        <span class="tag">🖼 Composition</span>
+                        <span class="tag">✨ Stylistic Consistency</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── RESULTS SECTION ───────────────────── -->
+<section class="results-section" id="results-section" aria-label="Rating results" aria-live="polite">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-tag">Your Results</span>
+            <h2 class="section-title" id="results-headline">Here's Your Score</h2>
+            <p class="section-desc text-muted mx-auto" id="results-subline">Here's what our AI judge thinks about your artwork.</p>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Score Gauge + Badge -->
+            <div class="col-lg-4">
+                <div class="glass-card p-4 text-center h-100 d-flex flex-column align-items-center justify-content-center gap-4">
+                    <!-- SVG Gauge -->
+                    <div class="score-gauge-wrap">
+                        <div class="score-gauge" role="img" aria-label="Overall score gauge">
+                            <svg viewBox="0 0 180 180" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#a78bfa" />
+                                        <stop offset="100%" stop-color="#4f46e5" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="gauge-track" cx="90" cy="90" r="80" />
+                                <circle class="gauge-fill" id="gauge-fill" cx="90" cy="90" r="80" />
+                            </svg>
+                            <div class="gauge-center">
+                                <div class="gauge-score" id="gauge-score" aria-live="polite">—</div>
+                                <div class="gauge-label">/ 10</div>
+                            </div>
+                        </div>
+                        <div id="score-verdict" style="font-size:.82rem;font-weight:600;color:var(--color-text-muted);margin-top:4px;"></div>
+                    </div>
+
+                    <!-- Badge -->
+                    <div class="badge-display" id="badge-display">
+                        <img id="badge-img" src="" alt="Achievement badge" />
+                        <div class="badge-name" id="badge-name"></div>
+                        <div style="font-size:.75rem;color:var(--color-text-muted);" id="badge-desc"></div>
+                    </div>
+
+                    <!-- Rate another button -->
+                    <button class="btn-secondary" id="rate-another-btn" onclick="resetForm()"
+                            aria-label="Rate another artwork">
+                        ↩ Rate Another
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sub-scores -->
+            <div class="col-lg-4">
+                <div class="glass-card p-4 h-100">
+                    <h3 class="mb-4" style="font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-dim);">
+                        Dimension Scores
+                    </h3>
+                    <div id="subscores-container" aria-label="Individual dimension scores">
+                        <!-- injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips + Share -->
+            <div class="col-lg-4 d-flex flex-column gap-4">
+                <!-- Tips -->
+                <div class="glass-card p-4 flex-grow-1">
+                    <h3 class="mb-3" style="font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-dim);">
+                        💡 Improvement Tips
+                    </h3>
+                    <ul class="tips-list" id="tips-list" aria-label="AI improvement suggestions">
+                        <!-- injected by JS -->
+                    </ul>
+                </div>
+
+                <!-- Share -->
+                <div class="glass-card p-4">
+                    <h3 class="mb-3" style="font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-dim);">
+                        Share Your Result
+                    </h3>
+                    <div class="share-buttons" id="share-buttons" aria-label="Social sharing options">
+                        <!-- injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── LEADERBOARD SECTION ───────────────── -->
+<section class="leaderboard-section" id="leaderboard-section" aria-label="Global leaderboard">
+    <div class="container">
+        <div class="d-flex align-items-end justify-content-between mb-5 flex-wrap gap-3">
+            <div>
+                <span class="section-tag">Community</span>
+                <h2 class="section-title">Top Creators</h2>
+                <p class="section-desc text-muted">The highest-scoring AI artists on the platform.</p>
+            </div>
+            <button class="btn-secondary" id="refresh-leaderboard-btn" onclick="refreshLeaderboard()"
+                    aria-label="Refresh leaderboard data">
+                ↻ Refresh
+            </button>
+        </div>
+
+        <div class="glass-card p-3 p-md-4 mb-5 animate-fade-up">
+            <div id="leaderboard-loading" class="text-center py-4 text-muted" style="font-size:.9rem;" aria-live="polite">
+                <div class="spinner mx-auto mb-2" style="border-top-color:var(--color-accent);" aria-hidden="true"></div>
+                Loading leaderboard…
+            </div>
+            <div id="leaderboard-empty" style="display:none;" class="text-center py-4 text-muted" style="font-size:.9rem;">
+                No leaderboard entries yet. Be the first! 🚀
+            </div>
+            <table class="leaderboard-table" id="leaderboard-table" style="display:none;"
+                   aria-label="Leaderboard top 10">
+                <thead>
+                    <tr>
+                        <th scope="col">Rank</th>
+                        <th scope="col">Creator</th>
+                        <th scope="col">Score</th>
+                        <th scope="col">Preview</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- injected by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ── GALLERY SECTION ───────────────────── -->
+<section class="section" id="gallery-section" style="display:none; padding-top:0;" aria-label="Top creators gallery">
+    <div class="container">
+        <div class="mb-5">
+            <span class="section-tag">Gallery</span>
+            <h2 class="section-title">Top Creators' Gallery</h2>
+            <p class="section-desc text-muted">A showcase of the highest-rated AI artworks from the community.</p>
+        </div>
+        <div class="gallery-grid animate-fade-up" id="gallery-grid" aria-label="Gallery of top artworks">
+            <!-- injected by JS -->
+        </div>
+    </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────── -->
+<footer class="site-footer" role="contentinfo">
+    <div class="container">
+        <div class="footer-brand">RateAiArt</div>
+        <p class="footer-text">&copy; 2026 RateAiArt — AI-powered art evaluation &middot; <a asp-area="" asp-page="/Privacy">Privacy Policy</a></p>
+    </div>
+</footer>
+
+<!-- ── LIGHTBOX ──────────────────────────── -->
+<div class="lightbox-backdrop" id="lightbox" role="dialog" aria-modal="true" aria-label="Artwork lightbox" aria-hidden="true">
+    <div class="lightbox-card">
+        <img class="lightbox-img" id="lightbox-img" src="" alt="" />
+        <div class="lightbox-info">
+            <div>
+                <div style="font-weight:700;font-size:.95rem;" id="lightbox-nick"></div>
+                <div style="font-size:.82rem;color:var(--color-accent);font-weight:600;" id="lightbox-score"></div>
+            </div>
+            <button class="lightbox-close" id="lightbox-close" aria-label="Close lightbox">&times;</button>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "WebApplication",
+  "name": "RateAiArt",
+  "url": "@(baseUrl)/",
+  "description": "Upload your AI-generated artwork and receive an instant expert score across 6 creative dimensions with personalised improvement tips. Earn bronze, silver or gold achievement badges and compete on the global leaderboard.",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "AI-powered art scoring across 6 dimensions",
+    "Personalised improvement tips",
+    "Bronze, Silver and Gold achievement badges",
+    "Global leaderboard",
+    "Top creators gallery",
+    "Social sharing to LinkedIn, X, Facebook and Pinterest"
+  ],
+  "screenshot": "@(baseUrl)/img/og-preview.jpg",
+  "inLanguage": "en",
+  "creator": {
+    "@@type": "Organization",
+    "name": "RateAiArt"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@@type": "Question",
+      "name": "What is RateAiArt?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "RateAiArt is a free tool that uses AI to evaluate and score AI-generated artwork across 6 creative dimensions: Creativity, Complexity, Render Quality, Lighting & Colors, Composition, and Stylistic Consistency."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How is the art score calculated?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "The overall score is the average of 6 dimension scores (each out of 10): Creativity, Complexity, Render Quality, Lighting & Colors, Composition, and Stylistic Consistency. The AI model analyses your image and assigns each dimension a score."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How do I earn a badge?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "You earn a Bronze badge for an overall score of 7.0 or above, a Silver badge for 9.0 or above, and a Gold badge for a perfect score of 10."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How many artworks can I rate?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "You can rate up to 5 artworks per 10 minutes. After reaching the limit, a countdown timer will show when your next rating slot is available."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How does the leaderboard work?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "If you consent to being published, your nickname, score, and artwork will appear in the top-10 global leaderboard and Top Creators Gallery. Only the highest-scoring submissions are shown."
+      }
+    }
+  ]
+}
+</script>
+}

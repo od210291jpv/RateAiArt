@@ -1,0 +1,17 @@
+{
+  "name": "RateAiArt",
+  "short_name": "RateAiArt",
+  "description": "AI-powered art rating and scoring tool. Upload your AI-generated artwork and receive expert feedback.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080b18",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
