@@ -2,17 +2,17 @@
 {
     public class EvaluationResponse
     {
-        public int Creativity { get; set; }
+        public double Creativity { get; set; }
 
-        public int Complexity { get; set; }
+        public double Complexity { get; set; }
 
-        public int RenderQuality { get; set; }
+        public double RenderQuality { get; set; }
 
-        public int LightingAndColors { get; set; }
+        public double LightingAndColors { get; set; }
 
-        public int Composition { get; set; }
+        public double Composition { get; set; }
 
-        public int StylisticConsistency { get; set; }
+        public double StylisticConsistency { get; set; }
 
         public List<string> ImprovementTips { get; set; } = new();
 

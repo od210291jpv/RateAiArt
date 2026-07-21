@@ -15,14 +15,20 @@ namespace RateAiArt.Controllers
         private readonly ApplicationContext _context;
         private readonly IAiEvaluationService _evaluationService;
         private readonly IWebHostEnvironment _environment;
+        private readonly IImagesService _imagesService;
         private readonly ILeaderBoardService _leaderBoardService;
 
-        public RateAiController(ApplicationContext context, IAiEvaluationService evaluationService, ILeaderBoardService leaderBoardService, IWebHostEnvironment environment)
+        public RateAiController(ApplicationContext context,
+            IAiEvaluationService evaluationService,
+            ILeaderBoardService leaderBoardService,
+            IWebHostEnvironment environment,
+            IImagesService imagesService)
         {
             _context = context;
             _evaluationService = evaluationService;
             _leaderBoardService = leaderBoardService;
             _environment = environment;
+            _imagesService = imagesService;
         }
 
         [HttpPost("rateAiArt")]
@@ -95,7 +101,7 @@ namespace RateAiArt.Controllers
 
             string filePath = Path.Combine(uploadsFolder, fileName);
 
-            byte[] imageBytes = Convert.FromBase64String(base64String);
+            byte[] imageBytes = Convert.FromBase64String(base64String);           
             await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
 
             var host = HttpContext.Request.Host.ToUriComponent();

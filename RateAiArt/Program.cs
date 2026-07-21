@@ -43,6 +43,7 @@ kernelBuilder.AddOpenAIChatCompletion(
 
 builder.Services.AddScoped<IAiEvaluationService, AiEvaluationService>();
 builder.Services.AddScoped<ILeaderBoardService, LeaderBoardService>();
+builder.Services.AddScoped<IImagesService, ImagesService>();
 
 var app = builder.Build();
 
