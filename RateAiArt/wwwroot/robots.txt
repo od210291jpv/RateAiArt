@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /uploads/
+
+# Prevent indexing internal/debug pages
+Disallow: /Debug
+Disallow: /Privacy
+
+Sitemap: /sitemap.xml

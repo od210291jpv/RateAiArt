@@ -1,7 +1,10 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Rate Your AI Art — AI-Powered Scoring & Feedback";
+    ViewData["Title"]           = "Rate Your AI Art — AI-Powered Scoring & Feedback";
+    ViewData["OgTitle"]         = "RateAiArt — Rate Your AI Art with Real AI Feedback";
+    ViewData["MetaDescription"] = "Upload your AI-generated artwork and get an instant expert score across 6 creative dimensions: Creativity, Complexity, Render Quality, Lighting & Colors, Composition, and Stylistic Consistency. Earn badges and compete on the global leaderboard.";   
+    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
 }
 
 <!-- Animated background -->
@@ -349,3 +352,84 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "WebApplication",
+  "name": "RateAiArt",
+  "url": "@(baseUrl)/",
+  "description": "Upload your AI-generated artwork and receive an instant expert score across 6 creative dimensions with personalised improvement tips. Earn bronze, silver or gold achievement badges and compete on the global leaderboard.",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "AI-powered art scoring across 6 dimensions",
+    "Personalised improvement tips",
+    "Bronze, Silver and Gold achievement badges",
+    "Global leaderboard",
+    "Top creators gallery",
+    "Social sharing to LinkedIn, X, Facebook and Pinterest"
+  ],
+  "screenshot": "@(baseUrl)/img/og-preview.jpg",
+  "inLanguage": "en",
+  "creator": {
+    "@@type": "Organization",
+    "name": "RateAiArt"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@@type": "Question",
+      "name": "What is RateAiArt?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "RateAiArt is a free tool that uses AI to evaluate and score AI-generated artwork across 6 creative dimensions: Creativity, Complexity, Render Quality, Lighting & Colors, Composition, and Stylistic Consistency."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How is the art score calculated?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "The overall score is the average of 6 dimension scores (each out of 10): Creativity, Complexity, Render Quality, Lighting & Colors, Composition, and Stylistic Consistency. The AI model analyses your image and assigns each dimension a score."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How do I earn a badge?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "You earn a Bronze badge for an overall score of 7.0 or above, a Silver badge for 9.0 or above, and a Gold badge for a perfect score of 10."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How many artworks can I rate?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "You can rate up to 5 artworks per 10 minutes. After reaching the limit, a countdown timer will show when your next rating slot is available."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "How does the leaderboard work?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "If you consent to being published, your nickname, score, and artwork will appear in the top-10 global leaderboard and Top Creators Gallery. Only the highest-scoring submissions are shown."
+      }
+    }
+  ]
+}
+</script>
+}

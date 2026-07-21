@@ -1,22 +1,64 @@
+@{
+    var request    = ViewContext.HttpContext.Request;
+    var canonicalUrl = $"{request.Scheme}://{request.Host}{request.Path}";
+    var siteBaseUrl  = $"{request.Scheme}://{request.Host}";
+}
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Rate your AI-generated artwork with real AI feedback and scores. Compete on the leaderboard with top creators." />
-    <title>@ViewData["Title"] - RateAiArt</title>
 
-    <!-- Google Fonts: Inter -->
+    <!-- ── Primary Meta ─────────────────────────────────── -->
+    <title>@ViewData["Title"] - RateAiArt</title>
+    <meta name="description"  content="@(ViewData["MetaDescription"] ?? "Rate your AI-generated artwork with real AI feedback and scores across 6 creative dimensions. Earn badges and compete on the global leaderboard.")" />
+    <meta name="keywords"     content="AI art rating, AI generated art, art score, AI feedback, leaderboard, creative AI, image evaluation, art judge" />
+    <meta name="author"       content="RateAiArt" />
+    <meta name="theme-color"  content="#7c3aed" />
+    <meta name="robots"       content="index, follow" />
+
+    <!-- ── Canonical ────────────────────────────────────── -->
+    <link rel="canonical" href="@canonicalUrl" />
+
+    <!-- ── Open Graph ───────────────────────────────────── -->
+    <meta property="og:type"         content="website" />
+    <meta property="og:site_name"    content="RateAiArt" />
+    <meta property="og:title"        content="@(ViewData["OgTitle"] ?? ViewData["Title"] + " - RateAiArt")" />
+    <meta property="og:description"  content="@(ViewData["MetaDescription"] ?? "Rate your AI-generated artwork with real AI feedback and scores across 6 creative dimensions. Earn badges and compete on the global leaderboard.")" />
+    <meta property="og:url"          content="@canonicalUrl" />
+    <meta property="og:image"        content="@(siteBaseUrl)/img/og-preview.jpg" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"    content="RateAiArt — AI-Powered Art Rating" />
+    <meta property="og:locale"       content="en_US" />
+
+    <!-- ── Twitter / X Card ─────────────────────────────── -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="@(ViewData["OgTitle"] ?? ViewData["Title"] + " - RateAiArt")" />
+    <meta name="twitter:description" content="@(ViewData["MetaDescription"] ?? "Rate your AI-generated artwork with real AI feedback and scores across 6 creative dimensions. Earn badges and compete on the global leaderboard.")" />
+    <meta name="twitter:image"       content="@(siteBaseUrl)/img/og-preview.jpg" />
+    <meta name="twitter:image:alt"   content="RateAiArt — AI-Powered Art Rating" />
+
+    <!-- ── Favicon & Icons ──────────────────────────────── -->
+    <link rel="icon"             href="~/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon"    href="~/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="~/img/apple-touch-icon.png" />
+    <link rel="manifest"         href="~/site.webmanifest" />
+
+    <!-- ── Google Fonts: Inter ──────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="preload"    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
 
-    <!-- Bootstrap (grid + utilities) -->
+    <!-- ── Bootstrap (grid + utilities) ────────────────── -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <!-- Site styles -->
+    <!-- ── Site styles ──────────────────────────────────── -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/RateAiArt.styles.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Head", required: false)
 </head>
 <body>
     @RenderBody()
