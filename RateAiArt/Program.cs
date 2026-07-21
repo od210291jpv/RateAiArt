@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Microsoft.OpenApi;
 using Microsoft.SemanticKernel;
 
@@ -6,11 +7,14 @@ using RateAiArt.Configuration;
 using RateAiArt.Data;
 using RateAiArt.Services;
 
+using System.Threading.RateLimiting;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -26,24 +30,39 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 var ollamaSettings = builder.Configuration.GetSection("OllamaSettings").Get<OllamaSettings>() ?? new();
-
 HttpClient ollamaHttpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
 builder.Services.AddSingleton(ollamaHttpClient);
 
 var kernelBuilder = builder.Services.AddKernel();
-
 kernelBuilder.AddOpenAIChatCompletion(
     modelId: ollamaSettings.DefaultModelName,
     apiKey: "ignore-me",
     httpClient: ollamaHttpClient,
     endpoint: new Uri($"{ollamaSettings.Host}/v1"));
 
-// Build the kernel and register it in DI
-
-
 builder.Services.AddScoped<IAiEvaluationService, AiEvaluationService>();
 builder.Services.AddScoped<ILeaderBoardService, LeaderBoardService>();
 builder.Services.AddScoped<IImagesService, ImagesService>();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("AiEndpointPolicy", httpContext =>
+    {
+        var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: clientIp,
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0
+            });
+    });
+});
 
 var app = builder.Build();
 
@@ -64,10 +83,13 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseRouting();
-app.UseAuthorization();
-app.UseStaticFiles();
 
+// ¿ “»¬¿÷≤ﬂ RATE LIMITING
+app.UseRouting();
+app.UseRateLimiter();
+app.UseAuthorization();
+
+app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapRazorPages().WithStaticAssets();
 app.MapControllers();

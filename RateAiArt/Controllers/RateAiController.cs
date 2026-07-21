@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 using RateAiArt.Data;
 using RateAiArt.Data.Models;
@@ -32,6 +33,7 @@ namespace RateAiArt.Controllers
         }
 
         [HttpPost("rateAiArt")]
+        [EnableRateLimiting("AiEndpointPolicy")]
         public async Task<IActionResult> RateAiArt([FromBody] PromptRequest request)
         {                        
             EvaluationResponse result = await this._evaluationService.EvaluateArtAsync(request.Base64Image, request.MimeType);
@@ -110,9 +112,9 @@ namespace RateAiArt.Controllers
         }
 
         [HttpGet("getLeaderBoard")]
-        public async Task<IActionResult> GetLeaderBoard()
+        public async Task<IActionResult> GetLeaderBoard([FromQuery] int limit = 10)
         {
-            List<LeaderBoardResultDto> result = await this._leaderBoardService.GetLeaderBoard(10);
+            List<LeaderBoardResultDto> result = await this._leaderBoardService.GetLeaderBoard(limit);
             return Ok(result);
         }
     }
